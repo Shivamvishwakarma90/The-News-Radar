@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <img src="logo.jpg" alt="logo">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The News Radar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> <!-- Font Awesome for icons -->
+    <style>
+        :root {
+            --primary-color: #007AFF; /* iOS Blue */
+            --light-gray: #f0f0f0;
+            --medium-gray: #e0e0e0;
+            --dark-gray: #666;
+            --text-color: #1c1c1e;
+            --card-bg: #ffffff;
+            --body-bg: #f9f9f9;
+            --header-height: 55px;
+            --nav-height: 50px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-color);
+            overscroll-behavior-y: contain; /* Prevent pull-to-refresh issues */
+            padding-top: calc(var(--header-height) + var(--nav-height)); /* Space for fixed header/nav */
+        }
+
+        /* --- Header --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--header-height);
+            background-color: var(--card-bg);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+
+        header h1 {
+            font-size: 1.25em;
+            font-weight: 600;
+        }
+
+        /* --- Navigation --- */
+        nav {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background-color: var(--card-bg);
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 0 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            z-index: 99;
+            border-bottom: 1px solid var(--light-gray);
+            /* Hide scrollbar */
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        nav::-webkit-scrollbar {
+             display: none; /* Chrome, Safari, Opera */
+        }
+
+        nav button {
+            display: inline-block;
+            padding: 0 18px;
+            height: 100%;
+            line-height: var(--nav-height);
+            border: none;
+            background: none;
+            font-size: 0.95em;
+            font-weight: 500;
+            color: var(--dark-gray);
+            cursor: pointer;
+            transition: color 0.2s ease, border-bottom 0.2s ease;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -1px; /* Align border with container border */
+        }
+
+        nav button.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        nav button:hover:not(.active) {
+            color: var(--text-color);
+        }
+
+        /* --- Main Content --- */
+        main {
+            padding: 15px;
+        }
+
+        #news-container {
+            display: grid;
+            gap: 15px;
+        }
+
+        /* --- News Article Card --- */
+        .news-article {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease-in-out;
+            cursor: pointer;
+            border: 1px solid var(--medium-gray);
+        }
+
+        .news-article:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .news-article img.article-image {
+            width: 100%;
+            height: 180px; /* Fixed height for images */
+            object-fit: cover; /* Crop images nicely */
+            display: block;
+            background-color: var(--light-gray); /* Placeholder color */
+        }
+
+        .article-content {
+            padding: 12px 15px;
+        }
+
+        .article-content h3 {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.3;
+            /* Limit title lines */
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .article-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8em;
+            color: var(--dark-gray);
+            margin-bottom: 10px;
+        }
+
+        .article-meta .source {
+            font-weight: 500;
+            max-width: 60%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .article-meta .time {
+            white-space: nowrap;
+        }
+
+        .article-description {
+            font-size: 0.9em;
+            line-height: 1.5;
+            color: #444;
+            /* Limit description lines */
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* Show 3 lines */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 10px;
+        }
+
+        .article-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding-top: 5px;
+            border-top: 1px solid var(--light-gray);
+        }
+
+        .article-actions i {
+            font-size: 1.1em;
+            color: var(--primary-color);
+            margin-left: 15px;
+            opacity: 0.7;
+        }
+         .article-actions .video-icon {
+             color: #E63946; /* Reddish color for video */
+         }
+
+
+        /* --- Loading & Error States --- */
+        #loading, #error-message {
+            text-align: center;
+            padding: 40px 15px;
+            font-size: 1em;
+            color: var(--dark-gray);
+        }
+
+        #loading { display: none; } /* Hidden initially */
+        #error-message { display: none; color: #D8000C; background-color: #FFD2D2; padding: 15px; border-radius: 5px;}
+
+        .spinner {
+            border: 4px solid var(--light-gray);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- Responsiveness (Example for larger screens) --- */
+        @media (min-width: 768px) {
+            body {
+                 padding-top: var(--header-height); /* Only header fixed */
+            }
+             nav {
+                 position: static; /* Nav becomes part of flow */
+                 height: auto;
+                 box-shadow: none;
+                 border-bottom: 1px solid var(--medium-gray);
+                 padding: 5px 15px;
+                 text-align: center;
+             }
+             nav button {
+                 line-height: 40px; /* Adjust line height */
+                 height: 40px;
+             }
+            #news-container {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Grid layout */
+                max-width: 1200px;
+                margin: 0 auto; /* Center container */
+            }
+             main {
+                 padding: 20px;
+             }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>The News Radar</h1>
+
+    </header>
+
+    <nav id="category-nav">
+        <!-- Mediastack categories: general, business, technology, entertainment, sports, science, health -->
+        <button class="category-btn active" data-category="general">General</button>
+        <button class="category-btn" data-category="business">Business</button>
+        <button class="category-btn" data-category="technology">Technology</button>
+        <button class="category-btn" data-category="entertainment">Entertainment</button>
+        <button class="category-btn" data-category="sports">Sports</button>
+        <button class="category-btn" data-category="science">Science</button>
+        <button class="category-btn" data-category="health">Health</button>
+    </nav>
+
+    <main>
+        <div id="loading">
+            <div class="spinner"></div>
+            Loading news...
+        </div>
+        <div id="error-message">
+            Could not load news. Please try again later.
+        </div>
+        <div id="news-container">
+            <!-- News articles will be loaded here -->
+        </div>
+    </main>
+
+    <script>
+        // --- Configuration ---
+        const apiKey = '33d7d1caf42df97063d0a8f4628c4bfe'; // Your Mediastack API Key (WARNING: Insecure in client-side code!)
+        const NEWS_API_URL = 'http://api.mediastack.com/v1/news'; // Mediastack API endpoint (use http for free tier)
+
+        // --- DOM Elements ---
+        const newsContainer = document.getElementById('news-container');
+        const loadingIndicator = document.getElementById('loading');
+        const errorMessage = document.getElementById('error-message');
+        const categoryNav = document.getElementById('category-nav');
+
+        const DEFAULT_CATEGORY = 'general';
+
+        // --- Helper Functions ---
+        function formatDate(isoDateString) {
+            if (!isoDateString) return 'N/A';
+            const date = new Date(isoDateString);
+            const now = new Date();
+            const diffSeconds = Math.round((now - date) / 1000);
+            const diffMinutes = Math.round(diffSeconds / 60);
+            const diffHours = Math.round(diffMinutes / 60);
+
+            if (diffSeconds < 60) return `${diffSeconds}s ago`;
+            if (diffMinutes < 60) return `${diffMinutes}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+
+        function showLoading() {
+            loadingIndicator.style.display = 'block';
+            newsContainer.innerHTML = '';
+            errorMessage.style.display = 'none';
+        }
+
+        function hideLoading() {
+            loadingIndicator.style.display = 'none';
+        }
+
+        function showError(message = 'Could not load news. Please check your connection or API key.') {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            newsContainer.innerHTML = '';
+        }
+
+        // --- Display News ---
+        function displayNews(articles) {
+            newsContainer.innerHTML = ''; // Clear previous content
+
+            if (!articles || articles.length === 0) {
+                newsContainer.innerHTML = '<p style="text-align: center; color: var(--dark-gray);">No articles found for this category.</p>';
+                return;
+            }
+
+            articles.forEach(article => {
+                // Skip articles without essential info (adjust based on Mediastack response)
+                if (!article.title || !article.url) {
+                    return;
+                }
+
+                const articleElement = document.createElement('article');
+                articleElement.className = 'news-article';
+                articleElement.addEventListener('click', () => {
+                    window.open(article.url, '_blank', 'noopener,noreferrer');
+                });
+
+                // Check for video (still unreliable) - Mediastack uses 'source' as a string
+                const mightBeVideo = article.source?.toLowerCase().includes('youtube') ||
+                                     article.url?.toLowerCase().includes('youtube.com');
+
+                // Use Mediastack property names: image, source, published_at
+                const imageUrl = article.image || 'placeholder.png'; // Use placeholder if image is null
+                const sourceName = article.source || 'Unknown Source';
+                const publishedDate = article.published_at || null;
+                const descriptionText = article.description || 'No description available.';
+
+                articleElement.innerHTML = `
+                    <img src="${imageUrl}" alt="Article Image" class="article-image" onerror="this.style.display='none';">
+                    <div class="article-content">
+                        <h3>${article.title}</h3>
+                        <div class="article-meta">
+                            <span class="source">${sourceName}</span>
+                            <span class="time">${formatDate(publishedDate)}</span>
+                        </div>
+                        <p class="article-description">${descriptionText}</p>
+                        <div class="article-actions">
+                            ${mightBeVideo ? '<i class="fas fa-play-circle video-icon" title="Potential video content"></i>' : ''}
+                            <i class="fas fa-share-alt" title="Share (dummy)"></i>
+                            <i class="fas fa-bookmark" title="Bookmark (dummy)"></i>
+                        </div>
+                    </div>
+                `;
+                newsContainer.appendChild(articleElement);
+            });
+        }
+
+        // --- Fetch News ---
+        async function fetchNews(category = DEFAULT_CATEGORY) {
+            showLoading();
+
+            // Construct Mediastack URL with correct parameters
+            // Note: Free tier might restrict parameters like countries. Check Mediastack docs.
+            const params = new URLSearchParams({
+                access_key: apiKey,
+                categories: category,
+                countries: 'us', // Specify country (e.g., US) - adjust if needed
+                limit: 30,       // Number of results
+                sort: 'published_desc' // Sort by newest first
+            });
+
+            const url = `${NEWS_API_URL}?${params.toString()}`;
+
+            try {
+                const response = await fetch(url);
+
+                // Check if response is ok (status in the range 200-299)
+                if (!response.ok) {
+                     // Try to parse error from Mediastack response body
+                     let errorData;
+                     try {
+                         errorData = await response.json();
+                     } catch (e) {
+                         // Ignore if response body is not JSON
+                     }
+                     const errorMsg = errorData?.error?.message || `HTTP error! Status: ${response.status}`;
+                     throw new Error(errorMsg);
+                }
+
+                const data = await response.json();
+
+                // Mediastack returns articles in the 'data' array
+                if (data && data.data) {
+                    displayNews(data.data);
+                } else {
+                    // Handle cases where response is ok but data format is unexpected
+                    throw new Error('Unexpected API response format.');
+                }
+
+            } catch (error) {
+                console.error('Error fetching news:', error);
+                // Display a user-friendly error message
+                showError(`Failed to load news: ${error.message}. Please check your connection or API key.`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // --- Event Listeners ---
+        categoryNav.addEventListener('click', (event) => {
+            if (event.target.tagName === 'BUTTON' && event.target.classList.contains('category-btn')) {
+                categoryNav.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+                const category = event.target.getAttribute('data-category');
+                fetchNews(category);
+            }
+        });
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchNews(DEFAULT_CATEGORY); // Load default category on page load
+        });
+
+    </script>
+    <!-- Placeholder image script (optional, if you want a visual fallback) -->
+    <script>
+      const placeholderDataUri = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23e0e0e0'/%3E%3Ctext x='50' y='55' font-size='12' text-anchor='middle' fill='%23666'%3ENo Image%3C/text%3E%3C/svg%3E";
+      // You can modify the onerror handler in displayNews if you prefer this SVG placeholder:
+      // onerror="this.src='${placeholderDataUri}'; this.onerror=null;"
+      // The current onerror handler simply hides the broken image element: onerror="this.style.display='none';"
+    </script>
+
+</body>
+</html>
